@@ -543,7 +543,7 @@ getprocs(){
   acquire(&ptable.lock);
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state != UNUSED)
+    if(p->state == SLEEPING || p->state == RUNNABLE || p->state == RUNNING)
       cuenta++;
 
   release(&ptable.lock);
