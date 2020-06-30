@@ -550,3 +550,14 @@ getprocs(){
   return cuenta;
 
 }
+
+void
+address(int* dir){
+
+  if (dir == 0)
+    cprintf("La dirección no es valida")
+  else
+    cprintf("Dirección fisica: %p", V2P(dir))
+
+  return dir;
+}

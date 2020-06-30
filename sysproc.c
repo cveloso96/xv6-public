@@ -95,3 +95,9 @@ sys_getprocs(void)
 {
   return getprocs();
 }
+
+void
+sys_address(int *dir)
+{
+  return address(dir);
+}
