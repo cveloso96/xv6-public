@@ -552,12 +552,12 @@ getprocs(){
 }
 
 void
-address(int* dir){
+address(int* direcciones){
 
-  if (dir == 0)
-    cprintf("La dirección no es valida")
+  if (direcciones == 0)
+    cprintf("La dirección no es valida");
   else
-    cprintf("Dirección fisica: %p", V2P(dir))
+    cprintf("Dirección virtual: %p \n", direcciones);
+    cprintf("Dirección fisica: %p", V2P(direcciones));
 
-  return dir;
 }

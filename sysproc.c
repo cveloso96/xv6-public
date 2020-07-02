@@ -97,7 +97,7 @@ sys_getprocs(void)
 }
 
 void
-sys_address(int *dir)
+sys_address(int *direcciones)
 {
-  return address(dir);
+  return address(direcciones);
 }
