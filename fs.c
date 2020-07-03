@@ -25,7 +25,7 @@
 static void itrunc(struct inode*);
 // there should be one superblock per disk device, but we run with
 // only one device
-struct superblock sb; 
+struct superblock sb;
 
 // Read the super block.
 void
@@ -172,7 +172,7 @@ void
 iinit(int dev)
 {
   int i = 0;
-  
+
   initlock(&icache.lock, "icache");
   for(i = 0; i < NINODE; i++) {
     initsleeplock(&icache.inode[i].lock, "inode");
@@ -386,6 +386,22 @@ bmap(struct inode *ip, uint bn)
     // Load indirect block, allocating if necessary.
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+    if((addr = a[bn]) == 0){
+      a[bn] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+    brelse(bp);
+    return addr;
+  }
+
+  bn -= NINDIRECT;
+
+  if(bn < NINDIRECT){
+    // Load indirect block, allocating if necessary.
+    if((addr = ip->addrs[NDIRECT+1]) == 0)
+      ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
     if((addr = a[bn]) == 0){
