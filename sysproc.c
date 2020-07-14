@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "rand.h"
 
 int
 sys_fork(void)
@@ -88,4 +89,17 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+//define tickets para lottery test
+int sys_deftickets(void){           //Lottery Scheduler
+  int ticket_number;
+  if (argint(0, &ticket_number) < 0){
+    myproc()->tickets = 20;
+  }
+  else
+  {
+    myproc()->tickets = ticket_number;
+  }
+  return 0;
 }

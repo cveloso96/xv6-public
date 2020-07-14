@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "rand.h"
 
 struct {
   struct spinlock lock;
@@ -86,6 +87,7 @@ allocproc(void)
   return 0;
 
 found:
+  p->tickets = 20;     //nro de tickets  //Lottery Scheduler
   p->state = EMBRYO;
   p->pid = nextpid++;
 
@@ -310,7 +312,20 @@ wait(void)
     sleep(curproc, &ptable.lock);  //DOC: wait-sleep
   }
 }
+int  //Modificación: Lottery Scheduler
+total_tickets(void)
+{
+  struct proc *p;
+  int suma_tickets = 0;
 
+  //suma los tickets de los procesos en estado RUNNABLE para obtener el total de tickets
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if (p->state == RUNNABLE){
+      suma_tickets += p->tickets;
+    }
+  }
+  return suma_tickets;     //retorno total tickets para los procesos RUNNABLE
+}
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -325,6 +340,10 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+
+  int counter = 0;
+  long ganador = 0;
+  int all_tickets = 0;
   
   for(;;){
     // Enable interrupts on this processor.
@@ -332,10 +351,23 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+    counter = 0;
+    ganador = 0;
+    all_tickets = 0;
+
+    all_tickets = total_tickets();  //total de tickets
+
+    ganador = random_at_most(all_tickets);
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
+      // encontrar ganador loteria
+      if ((counter + p->tickets) < ganador){
+        counter += p->tickets;
+        continue;
+      }
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -349,6 +381,8 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
+
+      break; //para que los siguientes procesos no se ejecuten junto con el ganador
     }
     release(&ptable.lock);
 
@@ -523,7 +557,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+    cprintf("%d %s %s c%d", p->pid, state, p->name, p->tickets);   //agregar tickets  //Lottery Scheduler
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context->ebp+2, pc);
       for(i=0; i<10 && pc[i] != 0; i++)
